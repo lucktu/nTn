@@ -94,41 +94,25 @@ static int load_allowed_sn_community(n2n_sn_t *sss, char *path) {
 static void help() {
 	print_n2n_version();
 
-	printf("supernode <config file> (see supernode.conf)\n"
-	       "or\n"
-	);
-	printf("supernode ");
-	printf("-l <local port> ");
-	printf("-c <path> ");
+	printf("Usage: supernode -l <local port>\n"
+	       "   or: supernode <config file> (see supernode.conf)\n");
+	printf("\n");
+	printf("-l <listen port>         | Main listen UDP port (through it, the other edges make the initial contact)\n");
+	printf("-c <file>                | File(with path) containing the allowed communities\n");
 #if defined(N2N_HAVE_DAEMON)
-	printf("[-f] ");
-#endif
-#ifndef WIN32
-	printf("[-u <uid> -g <gid>] ");
-#endif /* ifndef WIN32 */
-	printf("[-t <mgmt port>] ");
-	printf("[-d <net/bit>] ");
-	printf("[-v] ");
-	printf("\n\n");
-
-	printf("-l <port>     | Set UDP main listen port to <port>\n");
-	printf("-c <path>     | File containing the allowed communities.\n");
-#if defined(N2N_HAVE_DAEMON)
-	printf("-f            | Run in foreground.\n");
+	printf("-f                       | Run in foreground\n");
 #endif /* #if defined(N2N_HAVE_DAEMON) */
 #ifndef WIN32
-	printf("-u <UID>      | User ID (numeric) to use when privileges are dropped.\n");
-	printf("-g <GID>      | Group ID (numeric) to use when privileges are dropped.\n");
+	printf("-u <UID>                 | User ID (numeric) to use when privileges are dropped\n");
+	printf("-g <GID>                 | Group ID (numeric) to use when privileges are dropped\n");
 #endif /* ifndef WIN32 */
-	printf("-t <port>     | Management UDP Port (for multiple supernodes on a machine).\n");
-	printf("-d <net/bit>  | Subnet that provides dhcp service for edge. eg. -d 172.17.12.0/24\n");
-	printf("-v            | Increase verbosity. Can be used multiple times.\n");
-	printf("-h            | This help message.\n");
-	printf("\n");
-
+	printf("-t <mgmt port>           | Management UDP port. It can be set when you run multiple supernodes on a machine (default = %d)\n", N2N_SN_MGMT_PORT);
+	printf("-v                       | Increase verbosity. Can be used multiple times\n");
+	printf("-h                       | This help message\n");
+	printf("------------------------------- the following parameters are new from ntop's v2.8.0 by cnn2n -------------------------------\n");
+	printf("-a <net/bit>             | Set an automatically assigned subnet for edges (default = 172.17.12.0/24)\n");
 	exit(1);
 }
-
 
 /* *************************************************** */
 
@@ -144,7 +128,7 @@ static int setOption(int optkey, char *_optarg, n2n_sn_t *sss) {
 			sss->mport = atoi(_optarg);
 			break;
 
-		case 'd': {
+		case 'a': {
 			dec_ip_str_t ip_str = {'\0'};
 			in_addr_t net;
 			uint8_t bitlen;
@@ -219,7 +203,7 @@ static const struct option long_options[] = {
 		{"foreground",  no_argument,       NULL, 'f'},
 		{"local-port",  required_argument, NULL, 'l'},
 		{"mgmt-port",   required_argument, NULL, 't'},
-		{"dhcp",        required_argument, NULL, 'd'},
+		{"dhcp",        required_argument, NULL, 'a'},
 		{"help",        no_argument,       NULL, 'h'},
 		{"verbose",     no_argument,       NULL, 'v'},
 		{NULL, 0,                          NULL, 0}
@@ -231,7 +215,7 @@ static const struct option long_options[] = {
 static int loadFromCLI(int argc, char * const argv[], n2n_sn_t *sss) {
   u_char c;
 
-  while((c = getopt_long(argc, argv, "fl:u:g:t:d:c:vh",
+  while((c = getopt_long(argc, argv, "fl:u:g:t:a:c:vh",
 			 long_options, NULL)) != '?') {
     if(c == 255) break;
     setOption(c, optarg, sss);
